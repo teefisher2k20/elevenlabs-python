@@ -36,7 +36,7 @@ pip install elevenlabs
     - Supports 32 languages
     - Faster model, 50% lower price per character
 
-2. **Eleven Turbo v2.5** (`eleven_turbo_v2_5`)
+3. **Eleven Turbo v2.5** (`eleven_turbo_v2_5`)
 
     - Good balance of quality and latency
     - Ideal for developer use cases where speed is crucial
@@ -63,11 +63,9 @@ audio = client.text_to_speech.convert(
 play(audio)
 ```
 
-<details> <summary> Play </summary>
+Don't forget to set your API key as an environment variable `ELEVENLABS_API_KEY` or pass it directly to the client.
 
 🎧 **Try it out!** Want to hear our voices in action? Visit the [ElevenLabs Voice Lab](https://elevenlabs.io/voice-lab) to experiment with different voices, languages, and settings.
-
-</details>
 
 ## Voices
 
