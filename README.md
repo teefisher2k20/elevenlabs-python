@@ -223,6 +223,7 @@ asyncio.run(main())
 ```
 
 **Benefits of Custom Event Loop:**
+
 - **Context Propagation**: Maintain request-scoped state across async operations
 - **Resource Reuse**: Share existing async resources like HTTP sessions or database pools
 - **Loop Management**: Prevent "Task got Future attached to a different event loop" errors

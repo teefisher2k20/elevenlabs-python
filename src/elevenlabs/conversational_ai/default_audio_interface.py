@@ -22,10 +22,11 @@ class DefaultAudioInterface(AudioInterface):
         self.input_callback = input_callback
 
         # Audio output is buffered so we can handle interruptions.
+        # Use SimpleQueue for better performance (thread-safe, faster than Queue)
         # Start a separate thread to handle writing to the output stream.
-        self.output_queue: queue.Queue[bytes] = queue.Queue()
+        self.output_queue: queue.SimpleQueue[bytes] = queue.SimpleQueue()
         self.should_stop = threading.Event()
-        self.output_thread = threading.Thread(target=self._output_thread)
+        self.output_thread = threading.Thread(target=self._output_thread, daemon=True)
 
         self.p = self.pyaudio.PyAudio()
         self.in_stream = self.p.open(
@@ -61,14 +62,15 @@ class DefaultAudioInterface(AudioInterface):
 
     def interrupt(self):
         # Clear the output queue to stop any audio that is currently playing.
-        # Note: We can't atomically clear the whole queue, but we are doing
-        # it from the message handling thread so no new audio will be added
-        # while we are clearing.
-        try:
-            while True:
-                _ = self.output_queue.get(block=False)
-        except queue.Empty:
-            pass
+        # More efficient: create new queue instead of draining old one
+        old_queue = self.output_queue
+        self.output_queue = queue.SimpleQueue()
+        # Clear old queue to release memory
+        while True:
+            try:
+                old_queue.get_nowait()
+            except queue.Empty:
+                break
 
     def _output_thread(self):
         while not self.should_stop.is_set():

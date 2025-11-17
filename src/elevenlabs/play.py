@@ -15,26 +15,25 @@ def play(
     notebook: bool = False, 
     use_ffmpeg: bool = True
 ) -> None:
-    if isinstance(audio, Iterator):
-        audio = b"".join(audio)
+    # Convert iterator to bytes if needed
+    audio_bytes: bytes = b"".join(audio) if isinstance(audio, Iterator) else audio
+    
     if notebook:
         try:
             from IPython.display import Audio, display  # type: ignore
         except ModuleNotFoundError:
-            message = (
-                "`pip install ipython` required when `notebook=False` "
+            raise ValueError(
+                "`pip install ipython` required when `notebook=True` "
             )
-            raise ValueError(message)
 
-        display(Audio(audio, rate=44100, autoplay=True))
+        display(Audio(audio_bytes, rate=44100, autoplay=True))
     elif use_ffmpeg:
         if not is_installed("ffplay"):
-            message = (
+            raise ValueError(
                 "ffplay from ffmpeg not found, necessary to play audio. "
-                "On mac you can install it with 'brew install ffmpeg'. "
-                "On linux and windows you can install it from https://ffmpeg.org/"
+                "On Mac: 'brew install ffmpeg'. "
+                "On Linux/Windows: https://ffmpeg.org/"
             )
-            raise ValueError(message)
         args = ["ffplay", "-autoexit", "-", "-nodisp"]
         proc = subprocess.Popen(
             args=args,
@@ -42,20 +41,18 @@ def play(
             stdin=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        out, err = proc.communicate(input=audio)
+        out, err = proc.communicate(input=audio_bytes)
         proc.poll()
     else:
         try:
             import io
-
             import sounddevice as sd  # type: ignore
             import soundfile as sf  # type: ignore
         except ModuleNotFoundError:
-            message = (
+            raise ValueError(
                 "`pip install sounddevice soundfile` required when `use_ffmpeg=False` "
             )
-            raise ValueError(message)
-        sd.play(*sf.read(io.BytesIO(audio)))
+        sd.play(*sf.read(io.BytesIO(audio_bytes)))
         sd.wait()
 
 
